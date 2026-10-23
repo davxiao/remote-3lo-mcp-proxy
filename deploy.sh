@@ -65,6 +65,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --no-invoker-iam-check \
   --timeout=3600 \
   --concurrency=80 \
+  --max-instances="${MAX_INSTANCES:-2}" \
   --cpu=1 \
   --memory=512Mi \
   --set-env-vars="${ENV_VARS}"
