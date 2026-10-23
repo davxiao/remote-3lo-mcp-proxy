@@ -33,31 +33,49 @@ Point your MCP client (Google Vertex AI Search, Gemini Enterprise, or Google ADK
 
 ## Architecture & Endpoints
 
-```
-[MCP Client (Google ADK) / Browser]
-                 │
-                 ▼
-+─────────────────────────────────────────────────────────────────────────────────+
-| Google Cloud Run Shim Proxy                                                     |
-|                                                                                 |
-| 1. GET  /oauth/authorize (or /as/authorize) ──► Logs params, 302 to Auth URL    |
-| 2. POST /oauth/token     (or /as/token)     ──► Proxies & logs payload & tokens |
-| 3. POST /mcp             (and /mcp/*)       ──► Real-time stream pass-through   |
-|                                                                                 |
-| Wire-Fidelity Engine:                                                           |
-|  ├─► Downstream: aiter_raw() forwards untouched compressed bytes (gzip intact)  |
-|  └─► Logger:     decompress_body_safely() unzips in-memory for readable JSON    |
-|                                                                                 |
-| Logging Sinks:                                                                  |
-|  - Google Cloud Logging (Structured JSON to stdout with indexed MCP RPC methods)|
-|  - Google Cloud Storage (Offline raw JSON dumps by date/trace)                 |
-+─────────────────────────────────────────────────────────────────────────────────+
-                 │
-                 ▼
-[Remote MCP Server supporting 3LO]
-  ├─ Remote MCP Authorization URL
-  ├─ Remote MCP Token URL
-  └─ Remote MCP Server URL
+```mermaid
+flowchart TD
+    subgraph Clients["Clients"]
+        Browser["User Browser (Interactive 3LO)"]
+        ADK["MCP Client (Google ADK / Discovery Engine)"]
+    end
+
+    subgraph Proxy["Google Cloud Run Shim Proxy"]
+        direction TB
+        AuthEP["GET /oauth/authorize (Logs params, 302 redirect)"]
+        TokenEP["POST /oauth/token (Proxies token exchange)"]
+        McpEP["POST /mcp (StreamableHTTP stream pass-through)"]
+
+        subgraph Engine["Wire-Fidelity Engine"]
+            RawStream["Downstream: aiter_raw() forwards raw compressed bytes"]
+            Logger["Logger: decompress_body_safely() unzips for readable JSON"]
+        end
+
+        McpEP --> RawStream
+        McpEP --> Logger
+    end
+
+    subgraph Upstream["Remote Upstream Services"]
+        AuthURL["Remote MCP Authorization URL (TARGET_AUTH_URL)"]
+        TokenURL["Remote MCP Token URL (TARGET_TOKEN_URL)"]
+        McpURL["Remote MCP Server URL (TARGET_MCP_URL)"]
+    end
+
+    subgraph Sinks["Logging Sinks"]
+        CloudLogging["Google Cloud Logging (stdout with indexed mcp_rpc methods)"]
+        GCS["Google Cloud Storage (Optional raw session dumps)"]
+    end
+
+    Browser -->|3LO Login| AuthEP
+    ADK -->|Token Exchange| TokenEP
+    ADK -->|MCP Handshake & Tools| McpEP
+
+    AuthEP -.->|302 Redirect| AuthURL
+    TokenEP -->|POST /as/token| TokenURL
+    RawStream <-->|Raw Bidirectional Stream| McpURL
+
+    Logger --> CloudLogging
+    Logger --> GCS
 ```
 
 ### URL Mapping
