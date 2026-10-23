@@ -1,0 +1,60 @@
+# Environment & Secret Configurations
+.env
+.env.*
+!.env.sample
+!.env.example
+*.key
+*.pem
+*.crt
+*.p12
+*credentials*.json
+*service-account*.json
+
+# Traffic Dumps & Logs
+traffic_logs/
+test_traffic_logs/
+*.log
+*.dump
+*.har
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing & Coverage Cache
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Build & Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE & Editor Files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS Specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db

@@ -1,0 +1,10 @@
+.gcloudignore
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+*.pyo
+traffic_logs
+test_traffic_logs
+.pytest_cache
